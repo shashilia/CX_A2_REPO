@@ -2,37 +2,43 @@ using UnityEngine;
 
 public class PeddleBehavior : MonoBehaviour
 {
+    [Range(1.0f, 10.0f)]
     public float Speed = 5.0f;
-    public KeyCode LeftDirection;
-    public KeyCode RightDirection;
+    [SerializeField] private KeyCode _leftDirection;
+    [SerializeField] private KeyCode _rightDirection;
 
-    //Setting the border
-    public float leftLimit  = -8.72f;
-    public float rightLimit = 8.72f;
+    private float _direction;
+    private Rigidbody2D _rb;
 
     void Start()
     {
+        _rb = GetComponent<Rigidbody2D>();
+    }
 
+    void FixedUpdate()
+    {
+        _rb.linearVelocityX = _direction * Speed;
     }
 
     void Update()
     {
-        float movement = 0.0f;
+        _direction = 0.0f;
 
-        if (Input.GetKey(LeftDirection))
+        if (GameBehavior.Instance.State == Utilities.GameState.Play)
         {
-            movement -= Speed;
+            if (Input.GetKey(_rightDirection))
+                _direction += 1.0f;
+
+            if (Input.GetKey(_leftDirection))
+                _direction -= 1.0f;
         }
 
-        if (Input.GetKey(RightDirection))
+        if (GameBehavior.Instance.State == Utilities.GameState.GameOver)
         {
-            movement += Speed;
+            transform.position = new Vector3(0, -4, 0);
+            _direction = 0.0f;
         }
 
-        float newX = transform.position.x + movement * Time.deltaTime;
-        newX = Mathf.Clamp(newX, leftLimit, rightLimit);
-
-        transform.position = new Vector3(newX, transform.position.y, transform.position.z);
     }
 
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class BallBehavior : MonoBehaviour
 {
@@ -6,10 +7,17 @@ public class BallBehavior : MonoBehaviour
     [SerializeField] private float _paddleInfluence = 0.4f;
     private Rigidbody2D _rb;
 
+    [SerializeField] private AudioResource _paddleHit;
+    [SerializeField] private AudioResource _wallHit;
+    [SerializeField] private AudioResource _gameOver;
+    [SerializeField] private AudioResource _brickHit;
+
+    private AudioSource _source;
+
     void Start()
     {
         _rb = GetComponent<Rigidbody2D>();
-
+        _source = GetComponent<AudioSource>();
         ResetBall();
     }
 
@@ -20,16 +28,27 @@ public class BallBehavior : MonoBehaviour
             if (!Mathf.Approximately(other.rigidbody.linearVelocity.y, 0.0f))
             {
                 Vector2 direction = _rb.linearVelocity * (1 - _paddleInfluence)
-                                + other.rigidbody.linearVelocity * _paddleInfluence;
-
+                                    + other.rigidbody.linearVelocity * _paddleInfluence;
                 _rb.linearVelocity = _rb.linearVelocity.magnitude * direction.normalized;
             }
+            _source.resource = _paddleHit;
         }
+
+        else if(other.gameObject.CompareTag("Brick"))
+            _source.resource = _brickHit;
+
+        else
+            _source.resource = _wallHit;
+
+        _source.Play();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         ResetBall();
+        GameBehavior.Instance.State = Utilities.GameState.GameOver;
+        _source.resource = _gameOver;
+        _source.Play();
     }
 
     private void ResetBall()
@@ -60,6 +79,7 @@ public class BallBehavior : MonoBehaviour
 
     void Update()
     {
-
+        _rb.simulated = GameBehavior.Instance.State == Utilities.GameState.Play;
     }
+
 }
